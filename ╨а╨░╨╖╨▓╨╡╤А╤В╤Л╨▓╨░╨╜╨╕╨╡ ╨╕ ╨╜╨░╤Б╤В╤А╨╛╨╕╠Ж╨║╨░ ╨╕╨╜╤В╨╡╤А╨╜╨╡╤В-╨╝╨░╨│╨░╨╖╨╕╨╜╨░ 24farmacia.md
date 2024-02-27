@@ -158,14 +158,14 @@
 #.Справочник.га_РегионыИнтернетМагазина.#
 ```
 
-## 5. Установка
+## 5. Установка ИМ на одной виртуалке
 
 ### Backend
 
 1. Создать папку farmacia по пути /home  
  ```cd /home sudo mkdir farmacia```
 
-1. Создать в корне директории docker-compose.yml файл следующего содержания  
+1. Создать в корне директории docker-compose.yaml файл следующего содержания  
 
 ```yaml
 services:
@@ -214,6 +214,8 @@ services:
     # Также пробрасываем порт на котором висит приложение
     ports:
       - "3000:3000"
+    env_file:
+      .env_front
   api:
     image: registry.gitlab.com/n.gankin/farmacia-backend:pre-prod
     logging:
@@ -601,7 +603,7 @@ networks:
 APP_PORT=9997
 UV_THREADPOOL_SIZE=128
 
-POSTGRES_PASSWORD=<db_password>
+POSTGRES_PASSWORD=Ntcnjdfz<fpfBV ##пароль для базы данных которая создасться после запуска докера(пароль может быть любым) 
 POSTGRES_USER=farm
 POSTGRES_DB=farm
 DB_HOST=db
@@ -612,7 +614,7 @@ START_RABBIT_SENDER=true
 LOG_DIR=/home/farmacia/logs
 BACKEND_DIR=farm-backend
 RECIPE_MONITORING_TIMEOUT=60
-IMAGE_HOST=<host>
+IMAGE_HOST=24farmacia-dev2.gpkk.ru ### пишем полное имя для доступа к сайту(пример: 24farmacia-dev1.gpkk.ru)
 NODE_TLS_REJECT_UNAUTHORIZED=0
 ESIA_CERT_PIN=12345678
 PHONE_TEST_NUMBERS=9131852484,3333333333,3333333332,3333333331,1111111111,9831597282
@@ -627,14 +629,14 @@ EMAIL_PORT=587
 EMAIL_USER=kris.denesik@ethereal.email
 EMAIL_PASSWORD=gYEYneH8fXCC14Zeqq
 
-elasticsearchUrl=<elasitc_search_url> #http://172.17.80.157:9200/
+elasticsearchUrl=http://172.17.59.31:9200/ ### пишем ip адрес сервера с elasticsearch, он разворачивается чуть позже(Пример: http://172.17.59.31:9200/)
 recreateElasticIndex=false
-ELASTICSEARCH_PASSWORD=<elastic_search_password>
+ELASTICSEARCH_PASSWORD=Ntcnjdsq'kfcnbr ###Заполняем пароль для elasticsearch(может быть любым)
 
 INITIAL_UPLOAD_LIMIT=20000
 
 REDIS_HOST=redis
-REDIS_PASSWORD=<redis_password>
+REDIS_PASSWORD=Ntcnjdsqhtlbc  ### Пишем пароль для редиса(может быть любым)
 firebaseAdminCredentials=firebase-creds.json
 
 CHECK_FORGOTTEN_CART_INTERVAL="*/1 * * * *"
@@ -645,23 +647,23 @@ CODE_GENERATION_COOLDOWN_TIME=120
 
 APP_HOST=0.0.0.0
 
-RABBIT_HOST=<rabbit_host>
+RABBIT_HOST=uas-dev.gpkk.local ###пишем сервер с рэбитом (пример uas-dev.gpkk.local)
 RABBIT_PORT=5672
-RABBIT_LOGIN=<rabbit_login>
-RABBIT_PASSWORD=<rabbit_password>
-RABBIT_QUEUE=Farmacia
-RABBIT_VHOST=<rabbit_vhost>
+RABBIT_LOGIN=uas-dev  ##заполняем логин 
+RABBIT_PASSWORD=uas-dev   ##заполняем пароль
+RABBIT_QUEUE=farmacia-dev  ##заполняем название очереди которую создали в самом начале инструкции
+RABBIT_VHOST=24farmacia-dev  ###Заполняем виртуальный хост с рэббита(он либо уже создан либо нужно создать новый)
 
-RABBIT_CLIENT_HOST=<rabbit_host>
+RABBIT_CLIENT_HOST=uas-dev.gpkk.local ## заполняем данные с выгрузки из уаса
 RABBIT_CLIENT_PORT=5672
-RABBIT_CLIENT_LOGIN=<rabbit_login>
-RABBIT_CLIENT_PASSWORD=<rabbit_password>
+RABBIT_CLIENT_LOGIN=uas-dev ##заполняем логин
+RABBIT_CLIENT_PASSWORD=uas-dev  ##заполняем пароль
 RABBIT_CLIENT_EXCHANGE=data
-RABBIT_CLIENT_VHOST=<rabbit_vhost>
+RABBIT_CLIENT_VHOST=UAS_QA  ###Заполняем виртуальный хост с рэббита
 
 TZ=Asia/Krasnoyarsk
 
-FRONTEND_URL=<host> #https://sklad-farmacia.ru/
+FRONTEND_URL=https://24farmacia-dev2.gpkk.ru/ #https://sklad-farmacia.ru/
 BITRIX_API_URL=https://admin.24farmacia.ru/api_new
 
 ZABBIX_HOST=localhost
@@ -670,12 +672,12 @@ ZABBIX_TIMEOUT=5000
 ZABBIX_HOSTNAME=Farmacia
 ZABBIX_ENABLED=false
 
-dadataKey=<dadata_key>
-dadataSecret=<dadata_secret>
+dadataKey=0c3acf31d87772e0fd78b409216e5591d45aea45  ###она у всех одинаковая: 0c3acf31d87772e0fd78b409216e5591d45aea45
+dadataSecret=cc21fdfffc9757ad52d9c60e5b436449330861ee  ###она у всех одинаковая: cc21fdfffc9757ad52d9c60e5b436449330861ee
 dadataTimeRateLimit=1
 dadataRequestsLimit=60
 
-SBERBANK_SECRET=<sber_secret>
+SBERBANK_SECRET=6ti286iaqt31894ajbbbncq0k5  ###Она у всех одинаковая 6ti286iaqt31894ajbbbncq0k5
 
 FTP_24LEK_HOST='ftp.24lek.ru'
 FTP_24LEK_USER='Slava_farmcope'
@@ -707,24 +709,24 @@ FTP_MEGAPTEKA_IMPORT_PATH="import"
 MILK_KITCHEN_FORCE_JOB_DELAY=1
 MILK_KITCHEN_PICK_POINT_CHANGE_END_DAY=32
 
-RECAPTCHA_SECRET_KEY=<secret_key_recaptcha>
+RECAPTCHA_SECRET_KEY=6LeTwHcpAAAAAHIQua5HWIC1MqBpO-DNnniQ0IOE   ###Необходимо для каждого сайта делать свою рекапчу, нужно просить разрабов чтобы они ее выпустили
 MOBILE_AUTH_KEY=RealaHmAtInGIlickLiAlOGnoNdRafERhAlerMaXORAundubAS
 RECAPTCHA_THRESHOLD=0
 
 RABBIT_INT_HOST=rabbit-server
 RABBIT_INT_PORT=5672
 RABBIT_INT_LOGIN=farmacia
-RABBIT_INT_PASSWORD=<some_password>
+RABBIT_INT_PASSWORD=56ST4YCS150vzzBeir ###нужно написать любой пароль 
 RABBIT_INT_QUEUE=FarmaciaMain
 RABBIT_INT_VHOST=/
 
-SMS_USER=<sms_user>
-SMS_PASS=<sms_password>
+SMS_USER=gubapsms ### у всех одинаково gubapsms
+SMS_PASS=KM8eHdQp ### у всех одинаково KM8eHdQp
 
-WAREHOUSE_API_URL=http://warehouse-api:9995/api
+WAREHOUSE_API_URL=http://172.17.59.29:9995/api ##указываем свой ip где будет распологаться warehouse-api если делаем весь сайт на одной виртуалке то ее ip адрес
 WAREHOUSE_SERVICE_ACTIVE=true
 
-ADMIN_JWT_SECRET=<some_random_secret_string>
+ADMIN_JWT_SECRET=uh3eh2834erh89w45
 
 SHA_CERT=1789565cf6226f7aed7352d093d6f852215dafd5
 ESIA_CERT_PIN=cktgj,hz,
