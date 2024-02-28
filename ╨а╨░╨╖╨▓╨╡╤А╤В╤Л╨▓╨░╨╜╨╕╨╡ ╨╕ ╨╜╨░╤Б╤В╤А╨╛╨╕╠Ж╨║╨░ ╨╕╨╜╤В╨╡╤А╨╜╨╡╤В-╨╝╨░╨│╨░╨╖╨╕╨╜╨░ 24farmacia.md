@@ -747,7 +747,7 @@ NODE_OPTIONS=--max_old_space_size=2048
 
 1. Запускаем БД командой ```docker compose up db```
 
-1. Для доступа к образам приложений с сервера необходимо выполнить ```docker login``` с указанием deploy token, который нужно создать в гитлабе для вашего окружения. Данные действия просить сделать разработчиков. Но это не нужно делать, т.к. есть уже созданные токены для доступа, созданы для Коноваленко Виктора [инструкция](https://docs.gitlab.com/ee/user/project/deploy_tokens/). После создания токена выполняем ```docker login -u <deploy_token_login> -p <deploy_token_password> https://registry.gitlab.com/24farmacia```
+1. Для доступа к образам приложений с сервера необходимо выполнить ```docker login``` с указанием deploy token, который нужно создать в гитлабе для вашего окружения. Данные действия просить сделать разработчиков. Но это не нужно делать, т.к. есть уже созданные токены для доступа, созданы для Коноваленко Виктора. После создания токена выполняем ```docker login -u <deploy_token_login> -p <deploy_token_password> https://registry.gitlab.com/24farmacia```
 
 1. Запускаем API командой ```docker compose up api```
 
@@ -788,6 +788,9 @@ INITIAL_UPLOAD_LIMIT=100
 
 ```docker exec -it farmacia-db-1 psql -U farm -c 'create database "farm-warehouse";'```
 
+Логинимся на репозитории используя токены 
+```docker login -u <deploy_token_login> -p <deploy_token_password> https://registry.gitlab.com/24farmacia/farmacia-warehouse```
+
 1. Затем, запускаем API сервиса остатков ```docker compose up warehouse-api```
 
 1. Убедиться, что база farm-warehouse заполнилась таблицами из миграций
@@ -810,7 +813,7 @@ server {
     set $api_url http://api:9997;
     set $warehouse_api_url http://warehouse-api:9995;
     listen 80; # Порт который слушает nginx
-    server_name preprod.24farmacia.ru; # домен или ip сервера
+    server_name preprod.24farmacia.ru; # домен или ip сервера(нужно поставить свой)
     client_max_body_size 50M;
 
     add_header X-Robots-Tag "noindex, nofollow" always; #отключение индексации
@@ -840,13 +843,15 @@ server {
         set $warehouse_api_url http://warehouse-api:9995;
         listen 443 ssl http2;
         listen [::]:443 ssl http2;
-        server_name preprod.24farmacia.ru;
+        server_name preprod.24farmacia.ru; ##Нужно написать свое доменное имя
         client_max_body_size 50M;
 
         server_tokens off;
 
-        ssl_certificate /etc/letsencrypt/live/preprod.24farmacia.ru/fullchain.pem;
-        ssl_certificate_key /etc/letsencrypt/live/preprod.24farmacia.ru/privkey.pem;
+        ssl_certificate /etc/letsencrypt/live/preprod.24farmacia.ru/fullchain.pem;    ###используется эти сертификаты если выпускаем сертификаты через letsenscypt
+        ssl_certificate_key /etc/letsencrypt/live/preprod.24farmacia.ru/privkey.pem;   ###используется эти сертификаты если выпускаем сертификаты через letsenscypt
+#        ssl_certificate /etc/nginx/certs/gpkk_2024.crt;  ###используется эти сертификаты если используем сертификат gpkk.ru
+#        ssl_certificate_key /etc/nginx/certs/gpkk_2024.key;   ###используется эти сертификаты если используем сертификат gpkk.ru
 
         ssl_buffer_size 8k;
 
@@ -977,11 +982,59 @@ server {
 
 1. Поле **server_name** необходимо заполнить в соответствии с доменом, для которого настраивается окружение (*preprod.24farmacia.ru* в случае препрода). Рекомендуется сделать в файле поиск по строке *preprod.24farmacia.ru* и выполнить замену на нужный домен
 
+Создаем файл .env_front со след содержимым
+```
+NODE_TLS_REJECT_UNAUTHORIZED=0
+NUXT_ENV_DEBUG_API=false
+NUXT_ENV_DOMAIN=24farmacia-dev2.gpkk.ru #preprod.24farmacia.ru  ##Заполняем свой домен
+NUXT_ENV_API_URL=https://admin.24farmacia.ru/api_new/
+NUXT_ENV_API_URL_BROWSER=https://admin.24farmacia.ru/api_new/
+NUXT_ENV_API_URL_SF=http://172.17.59.29:9997/api #http://api:9997/api   ###Указываем ip адрес сервера где крутиться api(тот же ip где делаем все действия)
+NUXT_ENV_API_BROWSER_URL_SF=https://24farmacia-dev2.gpkk.ru/api  #заполняем url со свои доменом
+NUXT_ENV_ORDER_DELIVERY_ID=1
+NUXT_ENV_ORDER_PICKUP_ID=2
+NUXT_ENV_REGION_CODE_KRASNOYARSK=krasnoyarsk
+NUXT_ENV_REGION_CODE_KK=kk
+NUXT_ENV_REGION_CODE_NORILSK=norilsk
+NUXT_ENV_REGION_CODE_HAKASYA=hakasya
+NUXT_ENV_VUEX_RAW_ERROR=true
+NUXT_ENV_SENTRY_DNS=
+NUXT_ENV_SENTRY_PUBLISH_RELEASE=true
+NODE_ENV_COMAGIC_TOKEN=
+NODE_ENV_YANDEX_METRIKA_TOKEN=
+NODE_ENV_GOOGLE_ANALYSTICS_TOKEN=
+NUXT_ENV_SECTION_CODE_VETERINARIY=veterinariy
+NODE_ENV_ONLINE_CHAT_TOKEN=
+NODE_ENV_INSERT_ONLINE_CHAT=false
+NODE_ENV_INSERT_LIVETEX_CHAT=false
+NODE_ENV_INSERT_APPLE_APP_SITE_ASSOCIATION=false
+NODE_ENV_GOOGLE_TAG_MANAGER_ID=
+NODE_ENV_SESSION_LIFETIME=300000
+NUXT_ENV_RECAPTCHA_KEY=6LeTwHcpAAAAAHSY3zCI2RgVrzC0rWwwC6938-Pl   ###Заполняем recaptch публичного ключа/ это выдают разрабы 
+```
+
 1. Нужно создать пароль для доступа к сайту, если окружение не должно быть доступно всем пользователям (стейдж, прерпод...). Для этого нужно установить утилиту *apache2-utils* и вызвать команду ```sudo htpasswd -c /home/farmacia/nginx/.htpasswd <username>```. Далее утилита попросит ввести пароль для пользователя и информация будет сохранена в файл .htpasswd
+
+ Логинимся на репозитории используя токены 
+```docker login -u <deploy_token_login> -p <deploy_token_password> https://registry.gitlab.com/n.gankin/farm-admin```
+Запускаем контейнер 
+``` docker compose up admin -d```
+ Логинимся на репозитории используя токены 
+```docker login -u <deploy_token_login> -p <deploy_token_password> https://registry.gitlab.com/n.gankin/farm-front```
+Запускаем контейнер
+``` docker compose up nuxt -d```
 
 1. Запускаем фронт админки и самого сайта командой ```docker compose up admin nuxt```. Если появляется ошибка доступа к хранилищу образов, то необходимо создать deploy token для репозиториев админки и фронта соответственно с ранее указанной инструкцией и произвести вход.
 
-### Получение сертификатов
+### Запуск nginx
+1. Создаем каталог на сервере
+``` mkdir /var/www/html```
+2. Запускаем контейнер nginx
+``` docker compose up nginx -d ```
+
+
+
+### Получение сертификатов(Делаем жтот пункт только если выпускаем сертификат через letsenscrypt)
 
 1. Создаем файл init-certbot.sh с содержимым:
 
@@ -1079,6 +1132,10 @@ docker compose exec nginx nginx -s reload
 1. При успешном запуске, изменяем значение переменной staging на =0 в файле *init-certbot.sh*
 
 1. Повторяем шаг с запуском файла и ждем результата. После успешного запроса сертификатов, nginx перезапустится и можно будет перейти по ссылке домена и проверить сертификат через браузер.
+
+
+
+
 
 ### Rabbit и прочее
 
