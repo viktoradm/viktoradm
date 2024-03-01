@@ -36,7 +36,7 @@
 
 ЦПУ: 8 ядер
 
-Тестовая конфигурация:
+**Тестовая конфигурация:** 
 
 *Сервер для* *api, front, бд:*
 
@@ -63,14 +63,45 @@
 ## 3. Специализированное программное
 
 Для работы системы необходимо установить актуальную версию docker + docker compose (docker compose устанавливается вместе с docker engine).
+**Установка docker и docker compose на Centos 7 **
+1. Устанавливаем необходимые пакеты
+```sudo yum install -y yum-utils device-mapper-persistent-data lvm2```
+2. Добавляем репозиторий docker-ce
+```sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo```
+3. Устанавливаем Docker-CE
+```sudo yum install -y docker-ce```
+
+4. Добавляем нашего пользователя, под которым настраиваем ОС, в группу Docker
+```sudo usermod -aG docker $(whoami)```
+
+5. Применяем изменения к группам
+```newgrp docker```
+
+6. Добавляем сервис в автозагрузку и запускаем его
+```sudo systemctl enable --now docker```
+7. Добавляем репозиторий EPEL
+```sudo yum install -y epel-release```
+8.Устанавливаем Python-pip
+```sudo yum install -y python-pip python-devel gcc```
+```sudo yum install -y python3-pip```
+9. Устанавливаем Docker Compose
+```sudo pip3 install docker-compose```
+10. Делаем симлинк на файл docker-compose
+```sudo ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose```
+11. Проверяем установку Docker compose(должна появится версия)
+```sudo docker-compose version```
 
 ## 4. Конфигурирование
 
 1. Для корректной работы сайта необходимо настроить доменное имя, которое будет вести на сервер, где будет развернут сайт.
 
-1. Настроить очередь RMQ для взаимодействия с УАСом. Очередь назвать Farmacia и добавить следующие ключи маршрутизации, если их нет:
+1. Настроить очередь RMQ для взаимодействия с УАСом.
+2. Заходим в веб интерфейс rabbitmq на uas-dev
+``` uas-dev.gpkk.local:15672```
 
-```text
+4. Очередь назвать Farmacia и добавить следующие ключи маршрутизации, если их нет:
+
+```Farmacia
 #.ARM.Справочник.Пользователи.#
 #.Farmacia.#
 #.checkout.#
