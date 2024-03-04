@@ -67,7 +67,7 @@
 7. Добавляем репозиторий EPEL <br>
 ```sudo yum install -y epel-release``` <br>
 8.Устанавливаем Python-pip <br>
-```sudo yum install -y python-pip python-devel gcc```
+```sudo yum install -y python-pip python-devel gcc``` <br>
 ```sudo yum install -y python3-pip```
 9. Устанавливаем Docker Compose <br>
 ```sudo pip3 install docker-compose```
