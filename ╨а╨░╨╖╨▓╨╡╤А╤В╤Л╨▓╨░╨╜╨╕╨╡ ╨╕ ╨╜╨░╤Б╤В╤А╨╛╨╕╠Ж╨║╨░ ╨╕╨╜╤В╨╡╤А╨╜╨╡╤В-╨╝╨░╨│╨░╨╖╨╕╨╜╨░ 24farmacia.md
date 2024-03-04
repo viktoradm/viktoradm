@@ -348,6 +348,10 @@ docker compose exec nginx nginx -s reload
 1. Для запуска контейнеров обработчиков очередей RMQ и Redis необходимо выполнить команду <br>
 ```docker compose up redis watchtower jobs rabbit rabbit-int rabbit-self rabbit-sender rabbit-server warehouse-rabbit warehouse-rabbit-self warehouse-rabbit-sender -d```
 
+2. После того как все контейнеры запущены и находятся в статусе up
+![image](https://github.com/viktoradm/viktoradm/assets/136047592/69493c15-389d-4a5d-97b8-8595a78ddee0)
+3. Запускаем выгрзку данных с УАСа(с какого именно уаса запускать выгрузку, лучше уточнить у Жеравлевой Ирины)
+4. 
 
 
 
