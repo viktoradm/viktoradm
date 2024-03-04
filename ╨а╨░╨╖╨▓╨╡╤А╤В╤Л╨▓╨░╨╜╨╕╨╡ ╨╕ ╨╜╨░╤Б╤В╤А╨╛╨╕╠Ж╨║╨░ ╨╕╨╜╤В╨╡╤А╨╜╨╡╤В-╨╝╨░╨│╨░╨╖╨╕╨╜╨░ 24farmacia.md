@@ -44,36 +44,36 @@
 
 ## 2. Системное программное обеспечение
 
-Рекомендуемые ОС для каждого сервера: *Ubuntu v18+, CentOS 7, Astra Linux*
+Рекомендуемые ОС для каждого сервера: *Ubuntu v18+, CentOS 7, Astra Linux* <br>
 
-В целом, любая unix ОС, которая поддерживает установку docker
+В целом, любая unix ОС, которая поддерживает установку docker <br>
 
 ## 3. Специализированное программное
 
 Для работы системы необходимо установить актуальную версию docker + docker compose (docker compose устанавливается вместе с docker engine).
-**Установка docker и docker compose на Centos 7 **
-1. Устанавливаем необходимые пакеты
-```sudo yum install -y yum-utils device-mapper-persistent-data lvm2```
-2. Добавляем репозиторий docker-ce
+**Установка docker и docker compose на Centos 7 ** <br>
+1. Устанавливаем необходимые пакеты  <br>
+```sudo yum install -y yum-utils device-mapper-persistent-data lvm2``` 
+2. Добавляем репозиторий docker-ce <br>
 ```sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo```
-3. Устанавливаем Docker-CE
+3. Устанавливаем Docker-CE <br>
 ```sudo yum install -y docker-ce```
-4. Добавляем нашего пользователя, под которым настраиваем ОС, в группу Docker
+4. Добавляем нашего пользователя, под которым настраиваем ОС, в группу Docker <br>
 ```sudo usermod -aG docker $(whoami)```
-5. Применяем изменения к группам
+5. Применяем изменения к группам <br>
 ```newgrp docker```
-6. Добавляем сервис в автозагрузку и запускаем его
+6. Добавляем сервис в автозагрузку и запускаем его <br>
 ```sudo systemctl enable --now docker```
-7. Добавляем репозиторий EPEL
+7. Добавляем репозиторий EPEL <br>
 ```sudo yum install -y epel-release```
-8.Устанавливаем Python-pip
+8.Устанавливаем Python-pip <br>
 ```sudo yum install -y python-pip python-devel gcc```
 ```sudo yum install -y python3-pip```
-9. Устанавливаем Docker Compose
+9. Устанавливаем Docker Compose <br>
 ```sudo pip3 install docker-compose```
-10. Делаем симлинк на файл docker-compose
+10. Делаем симлинк на файл docker-compose <br>
 ```sudo ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose```
-11. Проверяем установку Docker compose(должна появится версия)
+11. Проверяем установку Docker compose(должна появится версия) <br>
 ```sudo docker-compose version```
 
 ## 4. Конфигурирование
@@ -81,8 +81,8 @@
 1. Для корректной работы сайта необходимо настроить доменное имя, которое будет вести на сервер, где будет развернут сайт.
 
 ##RABBITMQ
-1. Настроить очередь RMQ для взаимодействия с УАСом.
-2. Заходим в веб интерфейс rabbitmq на uas-dev
+1. Настроить очередь RMQ для взаимодействия с УАСом. 
+2. Заходим в веб интерфейс rabbitmq на uas-dev <br>
 ``` uas-dev.gpkk.local:15672```
 3. Создаем Virtual host для ИМ. Переходим в Admin затем в Virtual host. Пишем название виртуального хоста и жмем ОК.
 ![image](https://github.com/viktoradm/viktoradm/assets/136047592/185231c9-6070-410e-a683-709efdec77a9)
@@ -189,10 +189,10 @@
 
 ### Backend
 
-1. Создать папку farmacia по пути /home  
+1. Создать папку farmacia по пути /home   <br>
  ```cd /home && sudo mkdir farmacia```
 
-1. Копируем архив с файлами для ИМ на виртуалку. Архив лежит по пути 
+1. Копируем архив с файлами для ИМ на виртуалку. Архив лежит по пути  <br>
 ```\\dit\Shara\- АДМИНЫ\24farmacia```
 
 2. Распаковываем архив в папку /home/farmacia
@@ -201,21 +201,21 @@
 - .env.warehouse
 - .env_front
   
-4. Запускаем контейнер БД командой(нужно находиться в папке /home/farmacia)
+4. Запускаем контейнер БД командой(нужно находиться в папке /home/farmacia) <br>
 ```docker compose up db -d```
-5. Для доступа к образам приложений с сервера необходимо выполнить ```docker login``` с указанием deploy token, который нужно создать в гитлабе для вашего окружения. Данные действия просить сделать разработчиков. Но это можно и не делать, т.к. есть уже созданные токены для доступа, созданы для Коноваленко Виктора(в кипас). После создания токена выполняем
+5. Для доступа к образам приложений с сервера необходимо выполнить ```docker login``` с указанием deploy token, который нужно создать в гитлабе для вашего окружения. Данные действия просить сделать разработчиков. Но это можно и не делать, т.к. есть уже созданные токены для доступа, созданы для Коноваленко Виктора(в кипас). После создания токена выполняем <br>
 ```docker login -u <deploy_token_login> -p <deploy_token_password> https://registry.gitlab.com/24farmacia```
-6. Запускаем API командой
+6. Запускаем API командой <br>
  ```docker compose up api -d```
 
 ### Сервис остатков
 
 1. Для сервер остатков используется файл *.env.warehouse*. Проверить его если не заполняли 
-2. Создать базу данных farm-warehouse в СУБД
+2. Создать базу данных farm-warehouse в СУБД <br>
 ```docker exec -it farmacia-db-1 psql -U farm -c 'create database "farm-warehouse";'```
-3. Логинимся на репозитории используя токены(либо просим разработчиков выпустить новые, либо используем токены Коноваленко Виктора в кипас)
+3. Логинимся на репозитории используя токены(либо просим разработчиков выпустить новые, либо используем токены Коноваленко Виктора в кипас) <br>
 ```docker login -u <deploy_token_login> -p <deploy_token_password> https://registry.gitlab.com/24farmacia/farmacia-warehouse```
-4. Затем, запускаем API сервиса остатков
+4. Затем, запускаем API сервиса остатков <br>
  ```docker compose up warehouse-api -d```
 
 
@@ -223,25 +223,18 @@
 
 1. Правим файл nginx.conf находящийся по пути /home/farmacia/nginx/nginx.conf согласно комментариям в нем   
 2. Правим файл .env_front если сразу его не правили 
-3. (Данный пункт можно не делать, а использовать пароль который уже есть) Нужно создать пароль для доступа к сайту, если окружение не должно быть доступно всем пользователям (стейдж, прерпод...). Для этого нужно установить утилиту *apache2-utils(для debian)/ httpd-tools(RHEL) * и вызвать команду:
+3. (Данный пункт можно не делать, а использовать пароль который уже есть) Нужно создать пароль для доступа к сайту, если окружение не должно быть доступно всем пользователям (стейдж, прерпод...). Для этого нужно установить утилиту *apache2-utils(для debian)/ httpd-tools(RHEL) * и вызвать команду: <br>
  ```sudo htpasswd -c /home/farmacia/nginx/.htpasswd <username>```
 Далее утилита попросит ввести пароль для пользователя и информация будет сохранена в файл .htpasswd
 
-4. Логинимся на репозитории используя токены(либо просим разработчиков выпустить новые, либо используем токены Коноваленко Виктора в кипас)
+4. Логинимся на репозитории используя токены(либо просим разработчиков выпустить новые, либо используем токены Коноваленко Виктора в кипас) <br>
 ```docker login -u <deploy_token_login> -p <deploy_token_password> https://registry.gitlab.com/n.gankin/farm-admin```
-5. Запускаем контейнер admin
+5. Запускаем контейнер admin <br>
 ``` docker compose up admin -d```
-6. Логинимся на репозитории используя токены (либо просим разработчиков выпустить новые, либо используем токены Коноваленко Виктора в кипас)
+6. Логинимся на репозитории используя токены (либо просим разработчиков выпустить новые, либо используем токены Коноваленко Виктора в кипас) <br>
 ```docker login -u <deploy_token_login> -p <deploy_token_password> https://registry.gitlab.com/n.gankin/farm-front```
-7. Запускаем контейнер
+7. Запускаем контейнер <br>
 ``` docker compose up nuxt -d```
-
-### Запуск nginx
-1. Создаем каталог на сервере
-``` mkdir /var/www/html```
-2. Запускаем контейнер nginx
-``` docker compose up nginx -d ```
-
 
 ### Запуск nginx
 1. Создаем каталог на сервере
@@ -352,5 +345,5 @@ docker compose exec nginx nginx -s reload
 
 ### Rabbit и прочее
 
-1. Для запуска контейнеров обработчиков очередей RMQ и Redis необходимо выполнить команду
+1. Для запуска контейнеров обработчиков очередей RMQ и Redis необходимо выполнить команду <br>
 ```docker compose up redis watchtower jobs rabbit rabbit-int rabbit-self rabbit-sender rabbit-server warehouse-rabbit warehouse-rabbit-self warehouse-rabbit-sender -d```
