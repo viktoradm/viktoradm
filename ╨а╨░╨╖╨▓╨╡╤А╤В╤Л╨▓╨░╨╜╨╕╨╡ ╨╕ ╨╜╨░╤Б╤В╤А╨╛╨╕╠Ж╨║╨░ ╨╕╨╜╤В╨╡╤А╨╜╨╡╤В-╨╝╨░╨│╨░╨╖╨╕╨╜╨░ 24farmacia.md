@@ -202,256 +202,39 @@
 - .env_front
   
 4. Запускаем контейнер БД командой(нужно находиться в папке /home/farmacia)
-```docker compose up db```
+```docker compose up db -d```
 5. Для доступа к образам приложений с сервера необходимо выполнить ```docker login``` с указанием deploy token, который нужно создать в гитлабе для вашего окружения. Данные действия просить сделать разработчиков. Но это можно и не делать, т.к. есть уже созданные токены для доступа, созданы для Коноваленко Виктора(в кипас). После создания токена выполняем
 ```docker login -u <deploy_token_login> -p <deploy_token_password> https://registry.gitlab.com/24farmacia```
 6. Запускаем API командой
- ```docker compose up api```
+ ```docker compose up api -d```
 
 ### Сервис остатков
 
 1. Для сервер остатков используется файл *.env.warehouse*. Проверить его если не заполняли 
-2. Создать базу данных farm-warehouse в СУБД/
-
+2. Создать базу данных farm-warehouse в СУБД
 ```docker exec -it farmacia-db-1 psql -U farm -c 'create database "farm-warehouse";'```
-
-Логинимся на репозитории используя токены 
+3. Логинимся на репозитории используя токены(либо просим разработчиков выпустить новые, либо используем токены Коноваленко Виктора в кипас)
 ```docker login -u <deploy_token_login> -p <deploy_token_password> https://registry.gitlab.com/24farmacia/farmacia-warehouse```
+4. Затем, запускаем API сервиса остатков
+ ```docker compose up warehouse-api -d```
 
-1. Затем, запускаем API сервиса остатков ```docker compose up warehouse-api```
-
-1. Убедиться, что база farm-warehouse заполнилась таблицами из миграций
 
 ### Front
 
-1. Переходим в папку */home/farmacia* ```cd /home/farmacia```
+1. Правим файл nginx.conf находящийся по пути /home/farmacia/nginx/nginx.conf согласно комментариям в нем   
+2. Правим файл .env_front если сразу его не правили 
+3. (Данный пункт можно не делать, а использовать пароль который уже есть) Нужно создать пароль для доступа к сайту, если окружение не должно быть доступно всем пользователям (стейдж, прерпод...). Для этого нужно установить утилиту *apache2-utils(для debian)/ httpd-tools(RHEL) * и вызвать команду:
+ ```sudo htpasswd -c /home/farmacia/nginx/.htpasswd <username>```
+Далее утилита попросит ввести пароль для пользователя и информация будет сохранена в файл .htpasswd
 
-1. Создаем папку nginx и файл nginx.conf внутри со следующим содержимым  
-
-```nginx
-map $sent_http_content_type $expires {
-    "text/html" epoch;
-    "text/html; charset=utf-8"  epoch;
-    default off;
-}
-
-server {
-    resolver 127.0.0.11;
-    set $api_url http://api:9997;
-    set $warehouse_api_url http://warehouse-api:9995;
-    listen 80; # Порт который слушает nginx
-    server_name preprod.24farmacia.ru; # домен или ip сервера(нужно поставить свой)
-    client_max_body_size 50M;
-
-    add_header X-Robots-Tag "noindex, nofollow" always; #отключение индексации
-
-    location ~ /.well-known/acme-challenge {
-              allow all;
-              auth_basic off;
-              root /var/www/html;
-            }
-
-    location ^~ /api {
-        proxy_connect_timeout 600;
-        proxy_send_timeout 600;
-        proxy_read_timeout 600;
-        send_timeout 600;
-        proxy_pass $api_url;
-    }
-
-    location / {
-                    rewrite ^ https://$host$request_uri? permanent;
-            }
-}
-
-server {
-        resolver 127.0.0.11;
-        set $api_url http://api:9997;
-        set $warehouse_api_url http://warehouse-api:9995;
-        listen 443 ssl http2;
-        listen [::]:443 ssl http2;
-        server_name preprod.24farmacia.ru; ##Нужно написать свое доменное имя
-        client_max_body_size 50M;
-
-        server_tokens off;
-
-        ssl_certificate /etc/letsencrypt/live/preprod.24farmacia.ru/fullchain.pem;    ###используется эти сертификаты если выпускаем сертификаты через letsenscypt
-        ssl_certificate_key /etc/letsencrypt/live/preprod.24farmacia.ru/privkey.pem;   ###используется эти сертификаты если выпускаем сертификаты через letsenscypt
-#        ssl_certificate /etc/nginx/certs/gpkk_2024.crt;  ###используется эти сертификаты если используем сертификат gpkk.ru
-#        ssl_certificate_key /etc/nginx/certs/gpkk_2024.key;   ###используется эти сертификаты если используем сертификат gpkk.ru
-
-        ssl_buffer_size 8k;
-
-        ssl_protocols TLSv1.2 TLSv1.1 TLSv1;
-        ssl_prefer_server_ciphers on;
-
-        ssl_ciphers ECDH+AESGCM:ECDH+AES256:ECDH+AES128:DH+3DES:!ADH:!AECDH:!MD5;
-
-        ssl_ecdh_curve secp384r1;
-        ssl_session_tickets off;
-
-        ssl_stapling on;
-        ssl_stapling_verify on;
-
-        add_header X-Robots-Tag "noindex, nofollow" always; #отключение индексации
-
-        if ($request_uri ~ "^[^?]*?//") {
-            rewrite "^" $scheme://$host$uri permanent;
-        }
-
-        if ($request_uri ~* "^(.*/)index\.php$") {
-                return 301 $1;
-        }
-
-        location /logs {
-            alias /var/log/nginx;
-            autoindex on;
-        }
-
-        location /tls/ {
-            root /var/www/html;
-            try_files $uri / =301;
-        }
-
-        location ~* .yml$ {
-            proxy_pass $api_url/static/feeds/$request_uri;
-        }
-
-        location /robots.txt {
-            expires $expires;
-            proxy_redirect off;
-            proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto  $scheme;
-            proxy_read_timeout 3m;
-            proxy_connect_timeout 3m;
-            proxy_send_timeout 600;
-            send_timeout 600;
-            # Адрес нашего приложения, так как контейнеры связаны при помощи
-            # docker-compose мы можем обращаться к ним по имени контейнера, в данном случае nuxt_app
-            proxy_pass http://nuxt_app:3000;
-        }
-
-        location ^~ /sitemap {
-                    expires $expires;
-                    proxy_redirect off;
-                    proxy_set_header Host $host;
-                    proxy_set_header X-Real-IP $remote_addr;
-                    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-                    proxy_set_header X-Forwarded-Proto  $scheme;
-                    proxy_read_timeout 3m;
-                    proxy_connect_timeout 3m;
-                    proxy_send_timeout 600;
-                    send_timeout 600;
-                    # Адрес нашего приложения, так как контейнеры связаны при помощи
-                    # docker-compose мы можем обращаться к ним по имени контейнера, в данном случае nuxt_app
-                    proxy_pass http://nuxt_app:3000;
-                }
-
-        location / {
-            auth_basic "Доступ к сайту";
-            auth_basic_user_file /etc/nginx/conf.d/.htpasswd;
-            expires $expires;
-            proxy_redirect off;
-            proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto  $scheme;
-            proxy_read_timeout 3m;
-            proxy_connect_timeout 3m;
-            proxy_send_timeout 600;
-            send_timeout 600;
-            # Адрес нашего приложения, так как контейнеры связаны при помощи
-            # docker-compose мы можем обращаться к ним по имени контейнера, в данном случае nuxt_app
-            proxy_pass http://nuxt_app:3000;
-        }
-
-        location /warehouse-api/ {
-            proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_connect_timeout 600;
-            proxy_send_timeout 600;
-            proxy_read_timeout 600;
-            send_timeout 600;
-            proxy_pass http://warehouse-api:9995/api/;
-        }
-
-        location /warehouse/api/ {
-            proxy_connect_timeout 600;
-            proxy_send_timeout 600;
-            proxy_read_timeout 600;
-            send_timeout 600;
-            proxy_pass http://warehouse-api:9995/api/;
-        }
-
-        location ^~ /api {
-            proxy_connect_timeout 600;
-            proxy_send_timeout 600;
-            proxy_read_timeout 600;
-            send_timeout 600;
-            proxy_pass $api_url;
-        }
-
-        location ^~ /static {
-            proxy_pass $api_url;
-        }
-
-
-        location /admin/ {
-            proxy_pass http://admin:8081/;
-        }
-
-        root /var/www/html;
-        index index.html index.htm index.nginx-debian.html;
-}
-```
-
-1. Поле **server_name** необходимо заполнить в соответствии с доменом, для которого настраивается окружение (*preprod.24farmacia.ru* в случае препрода). Рекомендуется сделать в файле поиск по строке *preprod.24farmacia.ru* и выполнить замену на нужный домен
-
-Создаем файл .env_front со след содержимым
-```
-NODE_TLS_REJECT_UNAUTHORIZED=0
-NUXT_ENV_DEBUG_API=false
-NUXT_ENV_DOMAIN=24farmacia-dev2.gpkk.ru #preprod.24farmacia.ru  ##Заполняем свой домен
-NUXT_ENV_API_URL=https://admin.24farmacia.ru/api_new/
-NUXT_ENV_API_URL_BROWSER=https://admin.24farmacia.ru/api_new/
-NUXT_ENV_API_URL_SF=http://172.17.59.29:9997/api #http://api:9997/api   ###Указываем ip адрес сервера где крутиться api(тот же ip где делаем все действия)
-NUXT_ENV_API_BROWSER_URL_SF=https://24farmacia-dev2.gpkk.ru/api  #заполняем url со свои доменом
-NUXT_ENV_ORDER_DELIVERY_ID=1
-NUXT_ENV_ORDER_PICKUP_ID=2
-NUXT_ENV_REGION_CODE_KRASNOYARSK=krasnoyarsk
-NUXT_ENV_REGION_CODE_KK=kk
-NUXT_ENV_REGION_CODE_NORILSK=norilsk
-NUXT_ENV_REGION_CODE_HAKASYA=hakasya
-NUXT_ENV_VUEX_RAW_ERROR=true
-NUXT_ENV_SENTRY_DNS=
-NUXT_ENV_SENTRY_PUBLISH_RELEASE=true
-NODE_ENV_COMAGIC_TOKEN=
-NODE_ENV_YANDEX_METRIKA_TOKEN=
-NODE_ENV_GOOGLE_ANALYSTICS_TOKEN=
-NUXT_ENV_SECTION_CODE_VETERINARIY=veterinariy
-NODE_ENV_ONLINE_CHAT_TOKEN=
-NODE_ENV_INSERT_ONLINE_CHAT=false
-NODE_ENV_INSERT_LIVETEX_CHAT=false
-NODE_ENV_INSERT_APPLE_APP_SITE_ASSOCIATION=false
-NODE_ENV_GOOGLE_TAG_MANAGER_ID=
-NODE_ENV_SESSION_LIFETIME=300000
-NUXT_ENV_RECAPTCHA_KEY=6LeTwHcpAAAAAHSY3zCI2RgVrzC0rWwwC6938-Pl   ###Заполняем recaptch публичного ключа/ это выдают разрабы 
-```
-
-1. Нужно создать пароль для доступа к сайту, если окружение не должно быть доступно всем пользователям (стейдж, прерпод...). Для этого нужно установить утилиту *apache2-utils* и вызвать команду ```sudo htpasswd -c /home/farmacia/nginx/.htpasswd <username>```. Далее утилита попросит ввести пароль для пользователя и информация будет сохранена в файл .htpasswd
-
- Логинимся на репозитории используя токены 
+4. Логинимся на репозитории используя токены(либо просим разработчиков выпустить новые, либо используем токены Коноваленко Виктора в кипас)
 ```docker login -u <deploy_token_login> -p <deploy_token_password> https://registry.gitlab.com/n.gankin/farm-admin```
-Запускаем контейнер 
+5. Запускаем контейнер admin
 ``` docker compose up admin -d```
- Логинимся на репозитории используя токены 
+6. Логинимся на репозитории используя токены (либо просим разработчиков выпустить новые, либо используем токены Коноваленко Виктора в кипас)
 ```docker login -u <deploy_token_login> -p <deploy_token_password> https://registry.gitlab.com/n.gankin/farm-front```
-Запускаем контейнер
+7. Запускаем контейнер
 ``` docker compose up nuxt -d```
-
-1. Запускаем фронт админки и самого сайта командой ```docker compose up admin nuxt```. Если появляется ошибка доступа к хранилищу образов, то необходимо создать deploy token для репозиториев админки и фронта соответственно с ранее указанной инструкцией и произвести вход.
 
 ### Запуск nginx
 1. Создаем каталог на сервере
@@ -460,8 +243,14 @@ NUXT_ENV_RECAPTCHA_KEY=6LeTwHcpAAAAAHSY3zCI2RgVrzC0rWwwC6938-Pl   ###Запол�
 ``` docker compose up nginx -d ```
 
 
+### Запуск nginx
+1. Создаем каталог на сервере
+``` mkdir /var/www/html```
+2. Запускаем контейнер nginx
+``` docker compose up nginx -d ```
 
-### Получение сертификатов(Делаем жтот пункт только если выпускаем сертификат через letsenscrypt)
+
+### Получение сертификатов(Делаем этот пункт только если выпускаем сертификат через letsenscrypt)
 
 1. Создаем файл init-certbot.sh с содержимым:
 
@@ -561,9 +350,7 @@ docker compose exec nginx nginx -s reload
 1. Повторяем шаг с запуском файла и ждем результата. После успешного запроса сертификатов, nginx перезапустится и можно будет перейти по ссылке домена и проверить сертификат через браузер.
 
 
-
-
-
 ### Rabbit и прочее
 
-1. Для запуска контейнеров обработчиков очередей RMQ и Redis необходимо выполнить команду ```docker compose up```, которая запустит все конейнеры, которые указаны в docker-compose.yaml файле. Или же можно перечислить сервисы вручную ```docker compose up redis watchtower jobs rabbit rabbit-int rabbit-self rabbit-sender rabbit-server warehouse-rabbit warehouse-rabbit-self warehouse-rabbit-sender```
+1. Для запуска контейнеров обработчиков очередей RMQ и Redis необходимо выполнить команду
+```docker compose up redis watchtower jobs rabbit rabbit-int rabbit-self rabbit-sender rabbit-server warehouse-rabbit warehouse-rabbit-self warehouse-rabbit-sender -d```
