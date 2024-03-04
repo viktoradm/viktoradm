@@ -352,7 +352,7 @@ docker compose exec nginx nginx -s reload
 
 
 
-###*Установка ИМ на один сервер через ansible*
+###Установка ИМ на один сервер через ansible<br>
 ##RABBITMQ
 1. Настроить очередь RMQ для взаимодействия с УАСом. 
 2. Заходим в веб интерфейс rabbitmq на uas-dev <br>
