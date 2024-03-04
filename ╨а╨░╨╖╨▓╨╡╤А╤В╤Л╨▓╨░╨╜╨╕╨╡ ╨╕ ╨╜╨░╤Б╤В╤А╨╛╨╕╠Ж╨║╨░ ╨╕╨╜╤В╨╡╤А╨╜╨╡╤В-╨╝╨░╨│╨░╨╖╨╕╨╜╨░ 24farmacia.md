@@ -200,48 +200,18 @@
 - .env
 - .env.warehouse
 - .env_front
-
-
-1. Запускаем контейнер БД командой ```docker compose up db```
-
-1. Для доступа к образам приложений с сервера необходимо выполнить ```docker login``` с указанием deploy token, который нужно создать в гитлабе для вашего окружения. Данные действия просить сделать разработчиков. Но это не нужно делать, т.к. есть уже созданные токены для доступа, созданы для Коноваленко Виктора. После создания токена выполняем ```docker login -u <deploy_token_login> -p <deploy_token_password> https://registry.gitlab.com/24farmacia```
-
-1. Запускаем API командой ```docker compose up api```
-
-1. Подключиться к БД и проверить, что миграции были выполнены успешно
+  
+4. Запускаем контейнер БД командой(нужно находиться в папке /home/farmacia)
+```docker compose up db```
+5. Для доступа к образам приложений с сервера необходимо выполнить ```docker login``` с указанием deploy token, который нужно создать в гитлабе для вашего окружения. Данные действия просить сделать разработчиков. Но это можно и не делать, т.к. есть уже созданные токены для доступа, созданы для Коноваленко Виктора(в кипас). После создания токена выполняем
+```docker login -u <deploy_token_login> -p <deploy_token_password> https://registry.gitlab.com/24farmacia```
+6. Запускаем API командой
+ ```docker compose up api```
 
 ### Сервис остатков
 
-1. Создать в папке с проектом файл *.env.warehouse* следующего содержания
-
-```dosini
-POSTGRES_DB=farm-warehouse
-POSTGRES_USER=farm
-POSTGRES_PASSWORD=Ntcnjdfz<fpfBV ##пароль использовать такой же как в файле .env
-DB_HOST=db
-
-RABBIT_HOST=uas-dev.gpkk.local  ###пишем сервер с рэбитом (пример uas-dev.gpkk.local)
-RABBIT_PORT=5672
-RABBIT_LOGIN=uas-dev   ##заполняем логин
-RABBIT_PASSWORD=uas-dev  ##заполняем пароль
-RABBIT_QUEUE=farmacia-dev  ##заполняем название очереди которую создали в самом начале инструкции
-RABBIT_VHOST=24farmacia-dev   ###Заполняем виртуальный хост с рэббита(он либо уже создан либо нужно создать новый)
-
-RABBIT_INT_HOST=rabbit-server
-RABBIT_INT_PORT=5672
-RABBIT_INT_LOGIN=farmacia
-RABBIT_INT_PASSWORD=56ST4YCS150vzzBeir  ## заплняем пароль, может быть любым
-RABBIT_INT_QUEUE=FarmaciaWarehouse
-RABBIT_INT_VHOST=/
-
-JWT_ADMIN_SECRET=uh3eh2834erh89w45
-
-INITIAL_UPLOAD_LIMIT=100
-```
-
-1. **JWT_ADMIN_SECRET** должен совпадать с .env файлом!!!
-
-1. Создать базу данных farm-warehouse в СУБД
+1. Для сервер остатков используется файл *.env.warehouse*. Проверить его если не заполняли 
+2. Создать базу данных farm-warehouse в СУБД/
 
 ```docker exec -it farmacia-db-1 psql -U farm -c 'create database "farm-warehouse";'```
 
