@@ -50,7 +50,7 @@
 
 ## 3. Специализированное программное
 
-Для работы системы необходимо установить актуальную версию docker + docker compose (docker compose устанавливается вместе с docker engine).
+Для работы системы необходимо установить актуальную версию docker + docker compose (docker compose устанавливается вместе с docker engine). <br>
 **Установка docker и docker compose на Centos 7 ** <br>
 1. Устанавливаем необходимые пакеты  <br>
 ```sudo yum install -y yum-utils device-mapper-persistent-data lvm2``` 
