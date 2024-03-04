@@ -65,7 +65,7 @@
 6. Добавляем сервис в автозагрузку и запускаем его <br>
 ```sudo systemctl enable --now docker```
 7. Добавляем репозиторий EPEL <br>
-```sudo yum install -y epel-release```
+```sudo yum install -y epel-release``` <br>
 8.Устанавливаем Python-pip <br>
 ```sudo yum install -y python-pip python-devel gcc```
 ```sudo yum install -y python3-pip```
