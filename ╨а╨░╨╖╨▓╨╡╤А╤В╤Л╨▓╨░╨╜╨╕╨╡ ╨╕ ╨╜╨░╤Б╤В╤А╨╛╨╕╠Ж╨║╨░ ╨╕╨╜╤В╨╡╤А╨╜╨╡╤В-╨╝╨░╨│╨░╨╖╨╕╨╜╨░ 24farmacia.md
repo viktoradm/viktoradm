@@ -463,4 +463,15 @@ docker compose exec nginx nginx -s reload
 ```cd /ansible```
 14. Открываем файл с переменными которые нужно заполнить и вносим правки согласно комментариям в файле<br>
 ``` nano 24farmacia/vars/main.yml```
-15. 
+15. Копируем ключ ssh для доступа с сервера ansible на сервер ИМ
+ssh-copy-id -p <порт ssh> -i /home/admin-astra/.ssh/id_rsa.pub <имя пользователя>@<ip адрес>
+17. Заходим в файл inventory 
+```nano inventory```
+18. Добавляем строку для коннектра с сервером ИМ
+```<имя удаленного сервера> ansible_host=<ip адрес удаленного сервера> ansible_connection=ssh ansible_port=<порт ssh> ansible_user=<имя пользователя удаленного сервера> ansible_ssh_private_key_file=/home/admin-astra/.ssh/id_rsa```
+19. Запускаем playbook
+```ansible-playbook playbook-install-im.yml -i inventory -vv```
+20. Наблюдаем за вывовдом информации в консоль. Иногда при выполнении задач с названием "Запуск контейнера..." могут возникать ошибки. Ошибки связаны с отсутствием доступа с сервера ИМ до docker.hub необходимо повторять запуск плейбуков до момента пока все задачи не выполнятся. Для повторных запусков использовать команду:
+```ansible-playbook playbook-install-im.yml -i inventory --tag=docker -vv ```
+
+
